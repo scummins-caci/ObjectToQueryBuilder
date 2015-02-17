@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectToQueryBuilder", "ObjectToQueryBuilder\ObjectToQueryBuilder.csproj", "{A0875824-23C0-4276-A85D-9C5BE42B6039}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectToQueryBuilder.Test", "ObjectToQueryBuilder.Test\ObjectToQueryBuilder.Test.csproj", "{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0875824-23C0-4276-A85D-9C5BE42B6039}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0875824-23C0-4276-A85D-9C5BE42B6039}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0875824-23C0-4276-A85D-9C5BE42B6039}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0875824-23C0-4276-A85D-9C5BE42B6039}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
