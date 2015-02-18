@@ -52,6 +52,7 @@
   <ItemGroup>
     <Compile Include="DataFilterTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SampleModelRepositoryTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ObjectToQueryBuilder\ObjectToQueryBuilder.csproj">
