@@ -35,5 +35,28 @@ namespace ODataToQuery
 
             return quote.Operand as Expression<Func<TElement, bool>>;
         }
+
+        public static Expression ToExpression<TElement>(this OrderByQueryOption orderBy)
+        {
+            IQueryable queryable = Enumerable.Empty<TElement>().AsQueryable();
+            queryable = orderBy.ApplyTo(queryable, new ODataQuerySettings
+            {
+                EnableConstantParameterization = false,
+                HandleNullPropagation = HandleNullPropagationOption.False
+            });
+
+            var methodCallExp = queryable.Expression as MethodCallExpression;
+            if (methodCallExp == null)
+            {
+                // return a default generic expression that validates to true
+                return Expression.Lambda<Func<TElement, string>>(Expression.Constant(true),
+                    Expression.Parameter(typeof(TElement)));
+            }
+
+            return methodCallExp;
+        }
+    
     }
+
+    
 }

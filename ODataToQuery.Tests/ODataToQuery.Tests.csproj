@@ -102,12 +102,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ODataToQuery\ODataToQuery.csproj">
-      <Project>{67A57B2F-D98A-46AE-82B2-F63EB03CE5B7}</Project>
-      <Name>ODataToQuery</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Controllers\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

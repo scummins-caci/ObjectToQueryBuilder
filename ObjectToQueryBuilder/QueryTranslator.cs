@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 
 namespace ObjectToQueryBuilder
@@ -9,25 +11,23 @@ namespace ObjectToQueryBuilder
     {
         private StringBuilder sb;
         private string _orderBy = string.Empty;
-        private int? _skip = null;
-        private int? _take = null;
         private string _whereClause = string.Empty;
+        private readonly IDictionary<string, string> _propertyMapping;
 
-        public int? Skip
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="propertyMapping">mapping between class properties and sql column names</param>
+        public QueryTranslator(IDictionary<string, string> propertyMapping = null)
         {
-            get
-            {
-                return _skip;
-            }
+            Take = null;
+            Skip = null;
+            _propertyMapping = propertyMapping;
         }
 
-        public int? Take
-        {
-            get
-            {
-                return _take;
-            }
-        }
+        public int? Skip { get; private set; }
+
+        public int? Take { get; private set; }
 
         public string OrderBy
         {
@@ -47,9 +47,9 @@ namespace ObjectToQueryBuilder
 
         public string Translate(Expression expression)
         {
-            this.sb = new StringBuilder();
-            this.Visit(expression);
-            _whereClause = this.sb.ToString();
+            sb = new StringBuilder();
+            Visit(expression);
+            _whereClause = sb.ToString();
             return _whereClause;
         }
 
@@ -66,9 +66,9 @@ namespace ObjectToQueryBuilder
         {
             if (m.Method.DeclaringType == typeof(Queryable) && m.Method.Name == "Where")
             {
-                this.Visit(m.Arguments[0]);
+                Visit(m.Arguments[0]);
                 var lambda = (LambdaExpression)StripQuotes(m.Arguments[1]);
-                this.Visit(lambda.Body);
+                Visit(lambda.Body);
                 return m;
             }
             
@@ -77,50 +77,64 @@ namespace ObjectToQueryBuilder
                 case "StartsWith":
                     if (ParseStartsWithExpression(m))
                     {
-                        return null;
+                        return m;
                     }
                     break;
 
                 case "EndsWith":
                     if (ParseEndsWithExpression(m))
                     {
-                        return null;
+                        return m;
                     }
                     break;
 
                 case "Contains":
                     if (ParseContainsExpression(m))
                     {
-                        return null;
+                        return m;
                     }
                     break;
 
                 case "Take":
-                    if (this.ParseTakeExpression(m))
+                    if (ParseTakeExpression(m))
                     {
                         var nextExpression = m.Arguments[0];
-                        return this.Visit(nextExpression);
+                        return Visit(nextExpression);
                     }
                     break;
                 case "Skip":
-                    if (this.ParseSkipExpression(m))
+                    if (ParseSkipExpression(m))
                     {
                         var nextExpression = m.Arguments[0];
-                        return this.Visit(nextExpression);
+                        return Visit(nextExpression);
                     }
                     break;
                 case "OrderBy":
-                    if (this.ParseOrderByExpression(m, "ASC"))
+                    if (ParseOrderByExpression(m, "ASC"))
                     {
                         var nextExpression = m.Arguments[0];
-                        return this.Visit(nextExpression);
+                        return Visit(nextExpression);
+                    }
+                    break;
+                case "ThenBy":
+                    if (ParseOrderByExpression(m, "ASC"))
+                    {
+                        var nextExpression = m.Arguments[0];
+                        return Visit(nextExpression);
                     }
                     break;
                 case "OrderByDescending":
-                    if (this.ParseOrderByExpression(m, "DESC"))
+                    if (ParseOrderByExpression(m, "DESC"))
                     {
                         var nextExpression = m.Arguments[0];
-                        return this.Visit(nextExpression);
+                        return Visit(nextExpression);
+                    }
+                    break;
+                case "ThenByDescending":
+                    if (ParseOrderByExpression(m, "DESC"))
+                    {
+                        var nextExpression = m.Arguments[0];
+                        return Visit(nextExpression);
                     }
                     break;
             }
@@ -134,10 +148,10 @@ namespace ObjectToQueryBuilder
             {
                 case ExpressionType.Not:
                     sb.Append(" NOT ");
-                    this.Visit(u.Operand);
+                    Visit(u.Operand);
                     break;
                 case ExpressionType.Convert:
-                    this.Visit(u.Operand);
+                    Visit(u.Operand);
                     break;
                 default:
                     throw new NotSupportedException(string.Format("The unary operator '{0}' is not supported", u.NodeType));
@@ -153,8 +167,8 @@ namespace ObjectToQueryBuilder
         /// <returns></returns>
         protected override Expression VisitBinary(BinaryExpression b)
         {
-            sb.Append("(");
-            this.Visit(b.Left);
+            //sb.Append("(");  // not sure if this is needed
+            Visit(b.Left);
 
             switch (b.NodeType)
             {
@@ -175,25 +189,11 @@ namespace ObjectToQueryBuilder
                     break;
 
                 case ExpressionType.Equal:
-                    if (IsNullConstant(b.Right))
-                    {
-                        sb.Append(" IS ");
-                    }
-                    else
-                    {
-                        sb.Append(" = ");
-                    }
+                    sb.Append(IsNullConstant(b.Right) ? " IS " : " = ");
                     break;
 
                 case ExpressionType.NotEqual:
-                    if (IsNullConstant(b.Right))
-                    {
-                        sb.Append(" IS NOT ");
-                    }
-                    else
-                    {
-                        sb.Append(" <> ");
-                    }
+                    sb.Append(IsNullConstant(b.Right) ? " IS NOT " : " <> ");
                     break;
 
                 case ExpressionType.LessThan:
@@ -217,8 +217,8 @@ namespace ObjectToQueryBuilder
 
             }
 
-            this.Visit(b.Right);
-            sb.Append(")");
+            Visit(b.Right);
+            //sb.Append(")");  // not sure if this is needed
             return b;
         }
 
@@ -245,9 +245,7 @@ namespace ObjectToQueryBuilder
                         break;
 
                     case TypeCode.DateTime:
-                        sb.Append("'");
-                        sb.Append(c.Value);
-                        sb.Append("'");
+                        sb.AppendFormat("TO_DATE('{0}', 'MM/DD/YYYY HH:MI:SS AM')", c.Value);
                         break;
 
                     case TypeCode.Object:
@@ -264,13 +262,13 @@ namespace ObjectToQueryBuilder
 
         protected override Expression VisitMember(MemberExpression m)
         {
-            if (m.Expression != null && m.Expression.NodeType == ExpressionType.Parameter)
+            if (m.Expression == null || m.Expression.NodeType != ExpressionType.Parameter)
             {
-                sb.Append(m.Member.Name);
-                return m;
+                throw new NotSupportedException(string.Format("The member '{0}' is not supported", m.Member.Name));
             }
 
-            throw new NotSupportedException(string.Format("The member '{0}' is not supported", m.Member.Name));
+            sb.Append(MapMemberNameToColumnName(m.Member));
+            return m;
         }
 
         protected bool IsNullConstant(Expression exp)
@@ -285,50 +283,36 @@ namespace ObjectToQueryBuilder
 
             lambdaExpression = (LambdaExpression)Evaluator.PartialEval(lambdaExpression);
 
-            MemberExpression body = lambdaExpression.Body as MemberExpression;
-            if (body != null)
-            {
-                if (string.IsNullOrEmpty(_orderBy))
-                {
-                    _orderBy = string.Format("{0} {1}", body.Member.Name, order);
-                }
-                else
-                {
-                    _orderBy = string.Format("{0}, {1} {2}", _orderBy, body.Member.Name, order);
-                }
+            var body = lambdaExpression.Body as MemberExpression;
+            if (body == null) return false;
 
-                return true;
-            }
+            _orderBy = string.IsNullOrEmpty(_orderBy) 
+                ? string.Format("{0} {1}", MapMemberNameToColumnName(body.Member), order)
+                : string.Format("{0}, {1} {2}", _orderBy, MapMemberNameToColumnName(body.Member), order);
 
-            return false;
+            return true;
         }
 
         private bool ParseTakeExpression(MethodCallExpression expression)
         {
-            ConstantExpression sizeExpression = (ConstantExpression)expression.Arguments[1];
+            var sizeExpression = (ConstantExpression)expression.Arguments[1];
 
             int size;
-            if (int.TryParse(sizeExpression.Value.ToString(), out size))
-            {
-                _take = size;
-                return true;
-            }
+            if (!int.TryParse(sizeExpression.Value.ToString(), out size)) return false;
 
-            return false;
+            Take = size;
+            return true;
         }
 
         private bool ParseSkipExpression(MethodCallExpression expression)
         {
-            ConstantExpression sizeExpression = (ConstantExpression)expression.Arguments[1];
+            var sizeExpression = (ConstantExpression)expression.Arguments[1];
 
             int size;
-            if (int.TryParse(sizeExpression.Value.ToString(), out size))
-            {
-                _skip = size;
-                return true;
-            }
+            if (!int.TryParse(sizeExpression.Value.ToString(), out size)) return false;
 
-            return false;
+            Skip = size;
+            return true;
         }
 
         private bool ParseContainsExpression(MethodCallExpression expression)
@@ -338,7 +322,7 @@ namespace ObjectToQueryBuilder
 
             if (memberExpression == null || constantExpression == null) return false;
 
-            sb.AppendFormat("{0} like '%{1}%'", memberExpression.Member.Name, constantExpression.Value);
+            sb.AppendFormat("{0} like '%{1}%'", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
             return true;
         }
 
@@ -349,7 +333,7 @@ namespace ObjectToQueryBuilder
 
             if (memberExpression == null || constantExpression == null) return false;
 
-            sb.AppendFormat("{0} like '%{1}'", memberExpression.Member.Name, constantExpression.Value);
+            sb.AppendFormat("{0} like '%{1}'", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
             return true;
         }
 
@@ -360,9 +344,28 @@ namespace ObjectToQueryBuilder
 
             if (memberExpression == null || constantExpression == null) return false;
 
-            sb.AppendFormat("{0} like '{1}%'", memberExpression.Member.Name, constantExpression.Value);
+            sb.AppendFormat("{0} like '{1}%'", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
             return true;
         }
 
+        /// <summary>
+        /// Takes the member name and maps it to colun name
+        /// </summary>
+        /// <param name="member">member to check</param>
+        /// <returns>column name</returns>
+        private string MapMemberNameToColumnName(MemberInfo member)
+        {
+            if (_propertyMapping == null)
+            {
+                return member.Name;
+            }
+
+            if (!_propertyMapping.ContainsKey(member.Name))
+            {
+                return member.Name;
+            }
+
+            return _propertyMapping.FirstOrDefault(x => x.Key == member.Name).Value;
+        }
     }
 }

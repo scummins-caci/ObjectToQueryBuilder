@@ -15,12 +15,10 @@ namespace ODataToQuery.Api.Controllers
             // grab the OData filter expression
             var filterExpression = queryOptions.Filter.ToExpression<SampleModel>();
 
-
             //TODO:  need to implement the order by portion
             var orderBy = queryOptions.OrderBy;
 
-            var repository = new SampleModelRepository();
-            return repository.GetItems(filterExpression);
+            return new List<SampleModel>();
         }
     }
 }

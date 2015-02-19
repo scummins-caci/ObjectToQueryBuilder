@@ -7,10 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectToQueryBuilder", "Obj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ObjectToQueryBuilder.Test", "ObjectToQueryBuilder.Test\ObjectToQueryBuilder.Test.csproj", "{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ODataToQuery", "ODataToQuery\ODataToQuery.csproj", "{67A57B2F-D98A-46AE-82B2-F63EB03CE5B7}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ODataToQuery.Tests", "ODataToQuery.Tests\ODataToQuery.Tests.csproj", "{F96723FC-DBAD-4D20-B649-CEDD37209098}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,14 +21,6 @@ Global
 		{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08BCD579-C9D5-45D3-BF0F-977B75A42EE1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{67A57B2F-D98A-46AE-82B2-F63EB03CE5B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67A57B2F-D98A-46AE-82B2-F63EB03CE5B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67A57B2F-D98A-46AE-82B2-F63EB03CE5B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67A57B2F-D98A-46AE-82B2-F63EB03CE5B7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F96723FC-DBAD-4D20-B649-CEDD37209098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F96723FC-DBAD-4D20-B649-CEDD37209098}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F96723FC-DBAD-4D20-B649-CEDD37209098}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F96723FC-DBAD-4D20-B649-CEDD37209098}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
