@@ -50,6 +50,13 @@ namespace ObjectToQueryBuilder
             sb = new StringBuilder();
             Visit(expression);
             _whereClause = sb.ToString();
+
+            // remove leading and trailing parenthesis
+            if (_whereClause.Length > 0)
+            {
+                _whereClause = _whereClause.Substring(1, _whereClause.Length - 2);    
+            }
+            
             return _whereClause;
         }
 
@@ -167,7 +174,7 @@ namespace ObjectToQueryBuilder
         /// <returns></returns>
         protected override Expression VisitBinary(BinaryExpression b)
         {
-            //sb.Append("(");  // not sure if this is needed
+            sb.Append("("); 
             Visit(b.Left);
 
             switch (b.NodeType)
@@ -218,7 +225,7 @@ namespace ObjectToQueryBuilder
             }
 
             Visit(b.Right);
-            //sb.Append(")");  // not sure if this is needed
+            sb.Append(")"); 
             return b;
         }
 
@@ -322,7 +329,7 @@ namespace ObjectToQueryBuilder
 
             if (memberExpression == null || constantExpression == null) return false;
 
-            sb.AppendFormat("{0} like '%{1}%'", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
+            sb.AppendFormat("({0} like '%{1}%')", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
             return true;
         }
 
@@ -333,7 +340,7 @@ namespace ObjectToQueryBuilder
 
             if (memberExpression == null || constantExpression == null) return false;
 
-            sb.AppendFormat("{0} like '%{1}'", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
+            sb.AppendFormat("({0} like '%{1}')", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
             return true;
         }
 
@@ -344,7 +351,7 @@ namespace ObjectToQueryBuilder
 
             if (memberExpression == null || constantExpression == null) return false;
 
-            sb.AppendFormat("{0} like '{1}%'", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
+            sb.AppendFormat("({0} like '{1}%')", MapMemberNameToColumnName(memberExpression.Member), constantExpression.Value);
             return true;
         }
 

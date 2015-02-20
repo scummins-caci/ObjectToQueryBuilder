@@ -30,7 +30,9 @@ namespace ObjectToQueryBuilder.Test
                 {"Description", "DESCRIPTION_COLUMN"},
                 {"Count", "COUNT_COLUMN"},
                 {"CurrentDate", "CURRENT_DATE"},
-                {"IsReady", "IS_READY"}
+                {"IsReady", "IS_READY"},
+                {"Items", "ITEM_COLUMN"},
+                {"Title", "TITLE_COLUMN"}
             };
 
         }
@@ -350,6 +352,124 @@ namespace ObjectToQueryBuilder.Test
 
             var expression = queryOptions.Filter.ToExpression<SampleModel>();
             const string expectedSql = "DESCRIPTION_COLUMN like '%contains this%'";
+
+            // execute
+            var translator = new QueryTranslator(columnMapping);
+            translator.Translate(expression);
+            var whereClause = translator.WhereClause;
+
+            // assert
+            Assert.AreEqual(expectedSql, whereClause);
+        }
+
+        #endregion
+
+        #region And and Or
+
+        [TestMethod]
+        public void ODataUri_EqualTo_AndString_Test()
+        {
+            // setup
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://www.example.com/?$filter=Name eq 'Test' and Description eq 'Desc'");
+            var queryOptions = new ODataQueryOptions<SampleModel>(context, request);
+
+            var expression = queryOptions.Filter.ToExpression<SampleModel>();
+            const string expectedSql = "(NAME_COLUMN = 'Test') AND (DESCRIPTION_COLUMN = 'Desc')";
+
+            // execute
+            var translator = new QueryTranslator(columnMapping);
+            translator.Translate(expression);
+            var whereClause = translator.WhereClause;
+
+            // assert
+            Assert.AreEqual(expectedSql, whereClause);
+        }
+
+        [TestMethod]
+        public void ODataUri_EqualTo_OrString_Test()
+        {
+            // setup
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://www.example.com/?$filter=Name eq 'Test' or Description eq 'Desc'");
+            var queryOptions = new ODataQueryOptions<SampleModel>(context, request);
+
+            var expression = queryOptions.Filter.ToExpression<SampleModel>();
+            const string expectedSql = "(NAME_COLUMN = 'Test') OR (DESCRIPTION_COLUMN = 'Desc')";
+
+            // execute
+            var translator = new QueryTranslator(columnMapping);
+            translator.Translate(expression);
+            var whereClause = translator.WhereClause;
+
+            // assert
+            Assert.AreEqual(expectedSql, whereClause);
+        }
+
+        [TestMethod]
+        public void ODataUri_EqualTo_AndOrGrouping_Test()
+        {
+            // setup
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://www.example.com/?$filter=Name eq 'Test' and (Description eq 'Desc' or Count eq 4)");
+            var queryOptions = new ODataQueryOptions<SampleModel>(context, request);
+
+            var expression = queryOptions.Filter.ToExpression<SampleModel>();
+            const string expectedSql = "(NAME_COLUMN = 'Test') AND ((DESCRIPTION_COLUMN = 'Desc') OR (COUNT_COLUMN = 4))";
+
+            // execute
+            var translator = new QueryTranslator(columnMapping);
+            translator.Translate(expression);
+            var whereClause = translator.WhereClause;
+
+            // assert
+            Assert.AreEqual(expectedSql, whereClause);
+        }
+
+        [TestMethod]
+        public void ODataUri_EqualTo_OrAndGrouping_Test()
+        {
+            // setup
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://www.example.com/?$filter=(Name eq 'Test' or Description eq 'Desc') and Count eq 4");
+            var queryOptions = new ODataQueryOptions<SampleModel>(context, request);
+
+            var expression = queryOptions.Filter.ToExpression<SampleModel>();
+            const string expectedSql = "((NAME_COLUMN = 'Test') OR (DESCRIPTION_COLUMN = 'Desc')) AND (COUNT_COLUMN = 4)";
+
+            // execute
+            var translator = new QueryTranslator(columnMapping);
+            translator.Translate(expression);
+            var whereClause = translator.WhereClause;
+
+            // assert
+            Assert.AreEqual(expectedSql, whereClause);
+        }
+
+        [TestMethod]
+        public void ODataUri_GreaterThan_AndOrGrouping_Test()
+        {
+            // setup
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://www.example.com/?$filter=CurrentDate gt DATETIME'2015-02-19' and (Count gt 3 or Items gt 7)");
+            var queryOptions = new ODataQueryOptions<SampleModel>(context, request);
+
+            var expression = queryOptions.Filter.ToExpression<SampleModel>();
+            const string expectedSql = "(CURRENT_DATE > TO_DATE('2/19/2015 12:00:00 AM', 'MM/DD/YYYY HH:MI:SS AM')) AND ((COUNT_COLUMN > 3) OR (ITEM_COLUMN > 7))";
+
+            // execute
+            var translator = new QueryTranslator(columnMapping);
+            translator.Translate(expression);
+            var whereClause = translator.WhereClause;
+
+            // assert
+            Assert.AreEqual(expectedSql, whereClause);
+        }
+
+        [TestMethod]
+        public void ODataUri_Contains_AndOrGrouping_Test()
+        {
+            // setup
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://www.example.com/?$filter=substringof('test', Name) and (startswith(Description, 'Desc') or endswith(Title,  'new title'))");
+            var queryOptions = new ODataQueryOptions<SampleModel>(context, request);
+
+            var expression = queryOptions.Filter.ToExpression<SampleModel>();
+            const string expectedSql = "(NAME_COLUMN like '%test%') AND ((DESCRIPTION_COLUMN like 'Desc%') OR (TITLE_COLUMN like '%new title'))";
 
             // execute
             var translator = new QueryTranslator(columnMapping);
